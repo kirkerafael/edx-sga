@@ -8,8 +8,8 @@ from __future__ import absolute_import
 import json
 
 from django.core.management.base import BaseCommand, CommandError
-from lms.djangoapps.courseware.courses import get_course_by_id
-from lms.djangoapps.courseware.models import StudentModule
+from courseware.courses import get_course_by_id
+from courseware.models import StudentModule
 from opaque_keys.edx.keys import CourseKey
 from student.models import anonymous_id_for_user
 from submissions import api as submissions_api

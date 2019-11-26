@@ -33,7 +33,7 @@ from edx_sga.tasks import (get_zip_file_name, get_zip_file_path,
 from edx_sga.utils import (file_contents_iter, get_file_modified_time_utc,
                            get_file_storage_path, get_sha1,
                            is_finalized_submission, utcnow)
-from lms.djangoapps.courseware.models import StudentModule
+from courseware.models import StudentModule
 from safe_lxml import etree
 from student.models import user_by_anonymous_id
 from submissions import api as submissions_api
@@ -75,7 +75,7 @@ class StaffGradedAssignmentXBlock(StudioEditableXBlockMixin, ShowAnswerXBlockMix
     has_score = True
     icon_class = 'problem'
     STUDENT_FILEUPLOAD_MAX_SIZE = 4 * 1000 * 1000  # 4 MB
-    editable_fields = ('display_name', 'points', 'weight', 'showanswer', 'solution')
+    editable_fields = ('display_name', 'points', 'weight', 'file_types', 'showanswer', 'solution')
 
     display_name = String(
         display_name=_("Display Name"),
@@ -83,6 +83,13 @@ class StaffGradedAssignmentXBlock(StudioEditableXBlockMixin, ShowAnswerXBlockMix
         scope=Scope.settings,
         help=_("This name appears in the horizontal navigation at the top of "
                "the page.")
+    )
+
+    file_types = String(
+        display_name=_("Accepted filetypes"),
+        default=_(''),
+        scope=Scope.settings,
+        help=_("Accepted filetypes, like: ^image\/(gif|jpe?g|png)$, ^application\/(pdf|document)$")
     )
 
     weight = Float(
@@ -500,8 +507,8 @@ class StaffGradedAssignmentXBlock(StudioEditableXBlockMixin, ShowAnswerXBlockMix
                 zip_file_time = get_file_modified_time_utc(zip_file_path)
                 log.info(
                     "Zip file modified time: %s, last zip file time: %s for block: %s for instructor: %s",
-                    last_assignment_date,
                     zip_file_time,
+                    last_assignment_date,
                     location,
                     user.username
                 )
@@ -511,8 +518,12 @@ class StaffGradedAssignmentXBlock(StudioEditableXBlockMixin, ShowAnswerXBlockMix
 
                 # check if some one reset submission. If yes the recreate zip file
                 assignment_count = len(assignments)
-                if self.count_archive_files(user) != assignment_count:
+                zip_count = self.count_archive_files(user)
+                log.info("Zip file content count: %s, assignment count: %s", zip_count, assignment_count)
+                if zip_count != assignment_count:
                     zip_file_ready = False
+
+                log.info("Zip checking result: %s", zip_file_ready)
 
         if not zip_file_ready:
             log.info("Creating new zip file for block: %s for instructor: %s", location, user.username)
@@ -584,7 +595,8 @@ class StaffGradedAssignmentXBlock(StudioEditableXBlockMixin, ShowAnswerXBlockMix
             "student_state": json.dumps(self.student_state()),
             "id": self.location.name.replace('.', '_'),
             "max_file_size": self.student_upload_max_size(),
-            "support_email": settings.TECH_SUPPORT_EMAIL
+            "support_email": settings.TECH_SUPPORT_EMAIL,
+            "file_types": self.file_types
         }
         if self.show_staff_grading_interface():
             context['is_course_staff'] = True

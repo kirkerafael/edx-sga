@@ -64,6 +64,15 @@ function StaffGradedAssignmentXBlock(runtime, element) {
                             return;
                         }
                     }
+                    var acceptFileTypes = block.attr("data-file-types");
+                    if (!_.isUndefined(acceptFileTypes) && acceptFileTypes != '') {
+                      acceptFileTypes = new RegExp(acceptFileTypes, "i");
+                      if(data.files[0]['type'].length && !acceptFileTypes.test(data.files[0]['type'])) {
+                          state.error = gettext('The file you are trying to upload is not of valid file type.');
+                          render(state);
+                          return;
+                      }
+                    }
                     data.submit();
                 },
                 progressall: function(e, data) {

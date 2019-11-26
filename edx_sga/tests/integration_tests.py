@@ -26,9 +26,9 @@ from edx_sga.constants import ShowAnswer
 from edx_sga.sga import StaffGradedAssignmentXBlock
 from edx_sga.tests.common import (DummyResource, TempfileMixin, get_sha1,
                                   is_near_now, parse_timestamp, reformat_xml)
-from lms.djangoapps.courseware import module_render as render
-from lms.djangoapps.courseware.models import StudentModule
-from lms.djangoapps.courseware.tests.factories import StaffFactory
+from courseware import module_render as render
+from courseware.models import StudentModule
+from courseware.tests.factories import StaffFactory
 from opaque_keys.edx.locations import Location
 from opaque_keys.edx.locator import CourseLocator
 from student.models import UserProfile, anonymous_id_for_user
